@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { getTicket, closeTicket } from '../features/tickets/ticketSlice';
+import {
+  getTicket,
+  deleteTicket,
+  closeTicket,
+} from '../features/tickets/ticketSlice';
 import {
   getNotes,
   createNote,
   reset as notesReset,
 } from '../features/notes/noteSlice';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaWindowClose } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import Modal from 'react-modal';
 import BackButton from '../components/BackButton';
@@ -31,6 +35,7 @@ Modal.setAppElement('#root');
 
 function Ticket() {
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
   const [noteText, setNoteText] = useState('');
 
   const { ticket, isLoading, isSuccess, isError, message } = useSelector(
@@ -63,6 +68,14 @@ function Ticket() {
     navigate('/tickets');
   };
 
+  //Delete ticket function
+  const onDeleteTicket = () => {
+    dispatch(deleteTicket(ticketId));
+    closeDeleteModal();
+    toast.success('Ticket deleted');
+    navigate('/tickets');
+  };
+
   //Open/close modal
   const openModal = () => {
     setModalIsOpen(true);
@@ -71,11 +84,20 @@ function Ticket() {
     setModalIsOpen(false);
   };
 
+  //Open/close delete modal
+  const openDeleteModal = () => {
+    setDeleteModalIsOpen(true);
+  };
+  const closeDeleteModal = () => {
+    setDeleteModalIsOpen(false);
+  };
+
   //Create note submit
   const onNoteSubmit = (e) => {
     e.preventDefault();
     dispatch(createNote({ noteText, ticketId }));
     closeModal();
+    setNoteText('');
   };
 
   if (isLoading || notesIsLoading) {
@@ -123,7 +145,7 @@ function Ticket() {
       >
         <h2>Add Note</h2>
         <button onClick={closeModal} className='btn-close'>
-          X
+          <FaWindowClose />
         </button>
         <form onSubmit={onNoteSubmit}>
           <div className='form-group'>
@@ -144,6 +166,25 @@ function Ticket() {
         </form>
       </Modal>
 
+      <Modal
+        isOpen={deleteModalIsOpen}
+        onRequestClose={closeDeleteModal}
+        style={customStyles}
+        contentLabel='Delete ticket'
+      >
+        <h2>Delete Ticket</h2>
+        <button onClick={closeDeleteModal} className='btn-close'>
+          <FaWindowClose />
+        </button>
+        <p>
+          You're going to delete this ticket. This action can not be undone. Are
+          you sure?
+        </p>
+        <button onClick={onDeleteTicket} className='btn btn-danger'>
+          Delete this ticket
+        </button>
+      </Modal>
+
       {notes.map((note) => (
         <NoteItem key={note._id} note={note} />
       ))}
@@ -153,6 +194,9 @@ function Ticket() {
           Close ticket
         </button>
       )}
+      <button onClick={openDeleteModal} className='btn btn-block'>
+        Delete Ticket
+      </button>
     </div>
   );
 }
